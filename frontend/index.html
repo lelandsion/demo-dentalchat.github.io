@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dental Chatbot Demo</title>
+    <style>
+        #chat-widget { position: fixed; bottom: 20px; right: 20px; font-family: Arial; }
+        #chat-bubble { width: 60px; height: 60px; background: #00aaff; border-radius: 50%; cursor: pointer; display:flex; align-items:center; justify-content:center; color:white; font-size:24px; box-shadow:0 4px 8px rgba(0,0,0,0.2);}
+        #chat-box { width: 300px; height: 400px; background:white; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); overflow:hidden; display:flex; flex-direction:column; display:none; }
+        #messages { flex: 1; padding: 10px; overflow-y:auto; }
+        #chat-input { border:none; border-top:1px solid #ddd; padding: 10px; flex-shrink:0; width: calc(100% - 20px); margin: 0 10px; }
+        #send-btn { margin: 10px; background:#00aaff; color:white; border:none; padding: 5px 10px; border-radius:5px; cursor:pointer; }
+        #powered { font-size:0.8em; color:#666; text-align:center; margin-top:5px; }
+    </style>
+</head>
+<body>
+
+<div id="chat-widget">
+    <div id="chat-bubble">💬</div>
+    <div id="chat-box">
+        <div id="messages"></div>
+        <input id="chat-input" placeholder="Type your message..." />
+        <button id="send-btn">Send</button>
+        <div id="powered">Powered by Leland AI Assistant</div>
+    </div>
+</div>
+
+<script>
+    const bubble = document.getElementById("chat-bubble");
+    const box = document.getElementById("chat-box");
+    const messages = document.getElementById("messages");
+    const input = document.getElementById("chat-input");
+    const sendBtn = document.getElementById("send-btn");
+
+    // Toggle chat box
+    bubble.addEventListener("click", () => box.style.display = box.style.display === "none" ? "flex" : "none");
+
+    // Replace with your Vercel backend URL
+    const BACKEND_URL = "https://your-backend.vercel.app/api/chat";
+
+    sendBtn.addEventListener("click", async () => {
+        const text = input.value.trim();
+        if (!text) return;
+        messages.innerHTML += `<div>User: ${text}</div>`;
+        input.value = "";
+        messages.scrollTop = messages.scrollHeight;
+
+        const res = await fetch(BACKEND_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text })
+        });
+        const data = await res.json();
+        messages.innerHTML += `<div>AI: ${data.reply}</div>`;
+        messages.scrollTop = messages.scrollHeight;
+    });
+</script>
+
+</body>
+</html>
