@@ -4,17 +4,48 @@
     <meta charset="UTF-8">
     <title>Dental Chatbot Demo</title>
     <style>
-        #chat-widget { position: fixed; bottom: 20px; right: 20px; font-family: Arial; }
-        #chat-bubble { width: 60px; height: 60px; background: #00aaff; border-radius: 50%; cursor: pointer; display:flex; align-items:center; justify-content:center; color:white; font-size:24px; box-shadow:0 4px 8px rgba(0,0,0,0.2);}
-        #chat-box { width: 300px; height: 400px; background:white; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); overflow:hidden; display:flex; flex-direction:column; display:none; }
+        /* Make the iframe fill the whole page */
+        body, html { margin: 0; padding: 0; height: 100%; font-family: Arial; }
+        #framer-iframe { position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; z-index: 0; }
+
+        /* Chat widget styles */
+        #chat-widget { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+        #chat-bubble {
+            width: 60px; height: 60px; background: #00aaff; border-radius: 50%;
+            cursor: pointer; display:flex; align-items:center; justify-content:center;
+            color:white; font-size:24px; box-shadow:0 4px 8px rgba(0,0,0,0.2);
+        }
+        #chat-box {
+            width: 300px; height: 400px; background:white; border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); overflow:hidden;
+            display:flex; flex-direction:column; display:none;
+        }
         #messages { flex: 1; padding: 10px; overflow-y:auto; }
         #chat-input { border:none; border-top:1px solid #ddd; padding: 10px; flex-shrink:0; width: calc(100% - 20px); margin: 0 10px; }
         #send-btn { margin: 10px; background:#00aaff; color:white; border:none; padding: 5px 10px; border-radius:5px; cursor:pointer; }
         #powered { font-size:0.8em; color:#666; text-align:center; margin-top:5px; }
+
+        /* Badge cover */
+        #framer-badge-cover {
+            position: fixed;
+            bottom: 10px;      /* adjust to cover badge */
+            right: 10px;
+            width: 200px;      /* adjust width */
+            height: 50px;      /* adjust height */
+            background: white; /* match page background */
+            z-index: 500;      /* above iframe, below chat widget */
+        }
     </style>
 </head>
 <body>
 
+<!-- Framer site as full-page iframe -->
+<iframe id="framer-iframe" src="https://alive-object-455176.framer.app"></iframe>
+
+<!-- Cover the Framer badge -->
+<div id="framer-badge-cover"></div>
+
+<!-- Chat widget -->
 <div id="chat-widget">
     <div id="chat-bubble">💬</div>
     <div id="chat-box">
@@ -45,14 +76,18 @@
         input.value = "";
         messages.scrollTop = messages.scrollHeight;
 
-        const res = await fetch(BACKEND_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: text })
-        });
-        const data = await res.json();
-        messages.innerHTML += `<div>AI: ${data.reply}</div>`;
-        messages.scrollTop = messages.scrollHeight;
+        try {
+            const res = await fetch(BACKEND_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await res.json();
+            messages.innerHTML += `<div>AI: ${data.reply}</div>`;
+            messages.scrollTop = messages.scrollHeight;
+        } catch (err) {
+            messages.innerHTML += `<div style="color:red;">AI: Error connecting to backend</div>`;
+        }
     });
 </script>
 
