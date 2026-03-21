@@ -1,27 +1,30 @@
 export default async function handler(req, res) {
-    // CORS headers (important for frontend requests)
-    res.setHeader("Access-Control-Allow-Origin", "*"); // allow all domains
+    // --- CORS headers ---
+    res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-    // Preflight response
-    if (req.method === "OPTIONS") return res.status(200).end();
+    // --- Preflight ---
+    if (req.method === "OPTIONS") {
+        console.log("OPTIONS preflight request received");
+        return res.status(200).end();
+    }
 
-    if (req.method !== "POST") return res.status(405).send("Only POST allowed");
-
+    if (req.method !== "POST") {
+        console.log("Non-POST request received:", req.method);
+        return res.status(405).send("Only POST allowed");
+    }
 
     try {
         const { message } = req.body;
+        console.log("Incoming message from frontend:", message);
 
-        // Log incoming message
-        console.log("Incoming message:", message);
-
-        // Check API key
         if (!process.env.OPENAI_API_KEY) {
             console.error("OPENAI_API_KEY is missing!");
             return res.status(500).json({ reply: "Server misconfigured: missing API key" });
         }
 
+        console.log("Sending request to OpenAI...");
         const response = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -45,15 +48,19 @@ Do not mention AI.
             })
         });
 
-        // Log HTTP response status
-        console.log("OpenAI response status:", response.status);
+        console.log("OpenAI HTTP status:", response.status);
 
         const data = await response.json();
+        console.log("Full OpenAI response:", JSON.stringify(data, null, 2));
 
-        // Log full response (optional, for debugging)
-        console.log("OpenAI response data:", data);
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            console.warn("OpenAI response missing choices or message:", data);
+            return res.status(500).json({ reply: "AI did not return a valid response" });
+        }
 
-        const reply = data.choices?.[0]?.message?.content || "No response";
+        const reply = data.choices[0].message.content;
+        console.log("Reply extracted from OpenAI:", reply);
+
         res.status(200).json({ reply });
 
     } catch (error) {
