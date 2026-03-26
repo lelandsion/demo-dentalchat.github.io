@@ -1,3 +1,5 @@
+let conversations = {};
+
 export default async function handler(req, res) {
     // --- CORS headers ---
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -15,8 +17,20 @@ export default async function handler(req, res) {
         return res.status(405).send("Only POST allowed");
     }
 
+    conversations[sessionId].push({
+        role: "user",
+        content: message
+    });
+
     try {
         const { message } = req.body;
+        const sessionId = localStorage.getItem("chat_id") || crypto.randomUUID();
+        localStorage.setItem("chat_id", sessionId);
+
+        if (!conversations[sessionId]) {
+            conversations[sessionId] = [
+            ];
+        }
         console.log("Incoming message from frontend:", message);
 
         if (!process.env.OPENAI_API_KEY) {
@@ -29,22 +43,11 @@ export default async function handler(req, res) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+                "x-session-id": sessionId
             },
             body: JSON.stringify({
                 model: "gpt-4o-mini",
-                messages: [
-                    {
-                        role: "system",
-                        content: `
-You are a polite dental assistant.
-Collect name, email, phone.
-Be friendly and concise.
-Do not mention AI.
-`
-                    },
-                    { role: "user", content: message }
-                ]
+                messages: conversations[sessionId]
             })
         });
 
@@ -59,6 +62,13 @@ Do not mention AI.
         }
 
         const reply = data.choices[0].message.content;
+        await new Promise(r => setTimeout(r, 200));
+
+        conversations[sessionId].push({
+            role: "assistant",
+            content: reply
+        });
+
         console.log("Reply extracted from OpenAI:", reply);
 
         res.status(200).json({ reply });

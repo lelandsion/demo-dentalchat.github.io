@@ -4,48 +4,180 @@
     <meta charset="UTF-8">
     <title>Dental Chatbot Demo</title>
     <style>
-        /* Make the iframe fill the whole page */
-        body, html { margin: 0; padding: 0; height: 100%; font-family: Arial; }
-        #framer-iframe { position: fixed; top: 0; left: 0; width: 100%; height: 100%; border: none; z-index: 0; }
-
-        /* Chat widget styles */
-        #chat-widget { position: fixed; bottom: 70px; right: 20px; z-index: 1000; }
-        #chat-bubble {
-            width: 60px; height: 60px; background: #00aaff; border-radius: 50%;
-            cursor: pointer; display:flex; align-items:center; justify-content:center;
-            color:white; font-size:24px; box-shadow:0 4px 8px rgba(0,0,0,0.2);
+        /* --- Base styles --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Arial', sans-serif;
         }
-        #chat-box {
-            width: 300px; height: 400px; background:white; border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3); overflow:hidden;
-            display:flex; flex-direction:column; display:none;
-        }
-        #messages { flex: 1; padding: 10px; overflow-y:auto; }
-        #chat-input { border:none; border-top:1px solid #ddd; padding: 10px; flex-shrink:0; width: calc(100% - 20px); margin: 0 10px; }
-        #send-btn { margin: 10px; background:#00aaff; color:white; border:none; padding: 5px 10px; border-radius:5px; cursor:pointer; }
-        #powered { font-size:0.8em; color:#666; text-align:center; margin-top:5px; }
 
-        /* Badge cover */
-
-       /*  #framer-badge-cover {
+        #framer-iframe {
             position: fixed;
-            bottom: 10px;      !* adjust to cover badge *!
-            right: 10px;
-            width: 200px;      !* adjust width *!
-            height: 50px;      !* adjust height *!
-            background: white; !* match page background *!
-            z-index: 500;      !* above iframe, below chat widget *!
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            z-index: 0;
         }
-        *!*/
+
+        /* --- Chat widget --- */
+        #chat-widget {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        #chat-bubble {
+            width: 65px;
+            height: 65px;
+            background: #0077cc;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+            transition: transform 0.2s ease;
+        }
+
+        #chat-bubble:hover { transform: scale(1.1); }
+
+        #chat-box {
+            width: 320px;
+            height: 420px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        #messages {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* User bubble */
+        #messages .user {
+            align-self: flex-end;
+            background: #0077cc;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 16px 16px 4px 16px;
+            max-width: 80%;
+            animation: slideInRight 0.3s ease;
+        }
+
+        /* AI bubble */
+        #messages .ai {
+            align-self: flex-start;
+            background: #f1f1f1;
+            color: #333;
+            padding: 8px 12px;
+            border-radius: 16px 16px 16px 4px;
+            max-width: 80%;
+            animation: slideInLeft 0.3s ease;
+        }
+
+        #chat-input {
+            border: none;
+            border-top: 1px solid #ddd;
+            padding: 12px;
+            width: calc(100% - 24px);
+            margin: 0 12px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        #send-btn {
+            margin: 10px;
+            background: #0077cc;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s ease;
+        }
+
+        #send-btn:hover { background: #005fa3; }
+
+        #powered {
+            font-size: 0.75em;
+            color: #999;
+            text-align: center;
+            margin: 6px 0;
+        }
+
+        /* Typing indicator bubble */
+        .typing {
+            align-self: flex-start;
+            background: #f1f1f1;
+            padding: 10px 14px;
+            border-radius: 16px 16px 16px 4px;
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        /* Animated dots */
+        .typing span {
+            width: 6px;
+            height: 6px;
+            background: #888;
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
     </style>
 </head>
 <body>
 
 <!-- Framer site as full-page iframe -->
 <iframe id="framer-iframe" src="https://alive-object-455176.framer.app"></iframe>
-
-<!-- Cover the Framer badge -->
-<div id="framer-badge-cover"></div>
 
 <!-- Chat widget -->
 <div id="chat-widget">
@@ -54,7 +186,7 @@
         <div id="messages"></div>
         <input id="chat-input" placeholder="Type your message..." />
         <button id="send-btn">Send</button>
-        <div id="powered">Powered by Leland AI Assistant</div>
+        <div id="powered">Powered by DentalChat Assistant</div>
     </div>
 </div>
 
@@ -68,13 +200,19 @@
     // Toggle chat box
     bubble.addEventListener("click", () => box.style.display = box.style.display === "none" ? "flex" : "none");
 
-    // Replace with your Vercel backend URL
+    // Backend URL
     const BACKEND_URL = "https://dentalchat-alpha.vercel.app/api/chat";
 
+    // Send message
     sendBtn.addEventListener("click", async () => {
         const text = input.value.trim();
         if (!text) return;
-        messages.innerHTML += `<div>User: ${text}</div>`;
+
+        // Add user bubble
+        const userDiv = document.createElement("div");
+        userDiv.className = "user";
+        userDiv.textContent = `You: ${text}`;
+        messages.appendChild(userDiv);
         input.value = "";
         messages.scrollTop = messages.scrollHeight;
 
@@ -85,11 +223,26 @@
                 body: JSON.stringify({ message: text })
             });
             const data = await res.json();
-            messages.innerHTML += `<div>AI: ${data.reply}</div>`;
+
+            // Add AI bubble
+            const aiDiv = document.createElement("div");
+            aiDiv.className = "ai";
+            aiDiv.textContent = `Assistant: ${data.reply}`;
+            messages.appendChild(aiDiv);
             messages.scrollTop = messages.scrollHeight;
         } catch (err) {
-            messages.innerHTML += `<div style="color:red;">AI: Error connecting to backend</div>`;
+            const errDiv = document.createElement("div");
+            errDiv.className = "ai";
+            errDiv.style.color = "red";
+            errDiv.textContent = "Assistant: Error connecting to backend";
+            messages.appendChild(errDiv);
+            messages.scrollTop = messages.scrollHeight;
         }
+    });
+
+    // Optional: Enter key sends message
+    input.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendBtn.click();
     });
 </script>
 
